@@ -472,9 +472,10 @@ class WeChatExternalContact(BaseWeChatAPI):
         **注意**：调用该接口并不会直接发送消息给客户/客户群，需要相关的客服人员操作以后才会
         实际发送（客服人员的企业微信需要升级到2.7.5及以上版本）
 
-        同一个企业每个自然月内仅可针对一个客户/客户群发送4条消息，超过限制的用户将会被忽略。
+        仅会推送给最后跟客户进行聊天互动的企业成员。
+        每位客户/每个客户群每天可接收1条群发消息，可以是企业统一创建发送的，也可以是成员自己创建发送的；超过接收上限的客户/客户群将无法再收到群发消息。
 
-        详细请查阅企业微信官方文档 `添加企业群发消息任务`_ 章节。
+        详细请查阅企业微信官方文档 `创建企业群发`_ 章节。
 
         使用示例:
 
@@ -517,7 +518,7 @@ class WeChatExternalContact(BaseWeChatAPI):
                 # 无效或无法发送的external_userid列表
                 fail_list = result["fail_list"]
                 # 企业群发消息的id，可用于获取群发消息发送结果
-                msgid = result["msgid]
+                msgid = result["msgid"]
             except WeChatClientException as err:
                 # 接口调用失败
                 ...
@@ -525,7 +526,7 @@ class WeChatExternalContact(BaseWeChatAPI):
         :param template: 参考官方文档和使用示例
         :return: 请求结果（字典类型）
 
-        .. _添加企业群发消息任务: https://work.weixin.qq.com/api/doc/90000/90135/92135
+        .. _创建企业群发: https://developer.work.weixin.qq.com/document/path/92135
         """
         return self._post("externalcontact/add_msg_template", data=template)
 
@@ -775,7 +776,7 @@ class WeChatExternalContact(BaseWeChatAPI):
         )
         return self._post("externalcontact/transfer", data=data)
 
-    def get_corp_tag_list(self, tag_ids: Optional[List[str]] = None) -> dict:
+    def get_corp_tag_list(self, tag_ids: Optional[List[str]] = None, group_id: Optional[List[str]] = Non) -> dict:
         """
         获取企业标签库
 
@@ -815,7 +816,7 @@ class WeChatExternalContact(BaseWeChatAPI):
         .. _获取企业标签库: https://work.weixin.qq.com/api/doc/90000/90135/92117
             #%E8%8E%B7%E5%8F%96%E4%BC%81%E4%B8%9A%E6%A0%87%E7%AD%BE%E5%BA%93
         """
-        data = optionaldict(tag_id=tag_ids)
+        data = optionaldict(tag_id=tag_ids, group_id=group_id)
         return self._post("externalcontact/get_corp_tag_list", data=data)
 
     def add_corp_tag(
@@ -874,9 +875,8 @@ class WeChatExternalContact(BaseWeChatAPI):
             ，或者 ``[{"name": "tag_name"}]``。
         :return: 标签创建结果（字典类型，字段请参考 `添加企业客户标签`_）
 
-        .. _添加企业客户标签: https://work.weixin.qq.com/api/doc/90000/90135/921
-            17#%E6%B7%BB%E5%8A%A0%E4%BC%81%E4%B8%9A%E5%AE%A2%E6%88%B7%E6%A0%8
-            7%E7%AD%BE
+        .. _添加企业客户标签: https://developer.work.weixin.qq.com/document/path/92117
+        #%E6%B7%BB%E5%8A%A0%E4%BC%81%E4%B8%9A%E5%AE%A2%E6%88%B7%E6%A0%87%E7%AD%BE
 
         .. note::
             **权限说明：**
