@@ -776,7 +776,7 @@ class WeChatExternalContact(BaseWeChatAPI):
         )
         return self._post("externalcontact/transfer", data=data)
 
-    def get_corp_tag_list(self, tag_ids: Optional[List[str]] = None, group_id: Optional[List[str]] = Non) -> dict:
+    def get_corp_tag_list(self, tag_ids: Optional[List[str]] = None, group_ids: Optional[List[str]] = None) -> dict:
         """
         获取企业标签库
 
@@ -800,8 +800,9 @@ class WeChatExternalContact(BaseWeChatAPI):
             # 标签组列表
             tag_groups = data["tag_group"]  # type: List[dict]
 
-        :param tag_ids: 需要查询的标签id，如果为 ``None`` 则获取该企业的所有客户标签，
-            目前暂不支持标签组id。
+        :param tag_ids: 需要查询的标签id，如果为 ``None`` 则获取该企业的所有客户标签
+        :param group_ids: 要查询的标签组id，返回该标签组以及其下的所有标签信息。若tag_id和group_id均
+             为空，则返回所有标签。同时传递tag_id和group_id时，忽略tag_id，仅以group_id作为过滤条件。
         :return: 包含标签信息的字典类型数据（详细字段请参考 `获取企业标签库`_）
 
         .. note::
@@ -816,7 +817,7 @@ class WeChatExternalContact(BaseWeChatAPI):
         .. _获取企业标签库: https://work.weixin.qq.com/api/doc/90000/90135/92117
             #%E8%8E%B7%E5%8F%96%E4%BC%81%E4%B8%9A%E6%A0%87%E7%AD%BE%E5%BA%93
         """
-        data = optionaldict(tag_id=tag_ids, group_id=group_id)
+        data = optionaldict(tag_id=tag_ids, group_id=group_ids)
         return self._post("externalcontact/get_corp_tag_list", data=data)
 
     def add_corp_tag(
