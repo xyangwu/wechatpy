@@ -535,13 +535,81 @@ class WeChatExternalContact(BaseWeChatAPI):
         获取企业群发消息发送结果
 
         企业和第三方可通过该接口获取到添加企业群发消息模板生成消息的群发发送结果。
-        https://work.weixin.qq.com/api/doc#90000/90135/91561
+        https://developer.work.weixin.qq.com/document/16251
 
         :param msgid: 群发消息的id，通过添加企业群发消息模板接口返回
         :return: 返回的 JSON 数据包
         """
         data = optionaldict(msgid=msgid)
         return self._post("externalcontact/get_group_msg_result", data=data)
+
+    def get_groupmsg_list_v2(
+        self,
+        chat_type: str = "single",
+        start_time: int = None,
+        end_time: int = None,
+        creator: str = None,
+        filter_type: int = 2,
+        limit: int = 50,
+        cursor: str = None
+    ) -> dict:
+        """
+        获取群发记录列表
+
+        企业和第三方应用可通过此接口获取企业与成员的群发记录。
+
+        详细请查阅企业微信官方文档 `获取群发记录列表`_ 章节。
+            https://developer.work.weixin.qq.com/document/path/93338
+            #%E8%8E%B7%E5%8F%96%E7%BE%A4%E5%8F%91%E8%AE%B0%E5%BD%95%E5%88%97%E8%A1%A8
+
+        :param chat_type: 群发任务的类型，默认为single，表示发送给客户，group表示发送给客户群
+        :param start_time: 群发任务记录开始时间
+        :param end_time: 群发任务记录结束时间
+        :param creator: 群发任务创建人企业账号id
+        :param filter_type: 创建人类型。0：企业发表 1：个人发表 2：所有，包括个人创建以及企业创建，默认情况下为所有类型
+        :param limit: 返回的最大记录数，整型，最大值100，默认值50，超过最大值时取默认值
+        :param cursor: 用于分页查询的游标，字符串类型，由上一次调用返回，首次调用可不填
+        :return: 响应数据
+
+        .. warning::
+
+            **补充说明：**
+        - 群发任务记录的起止时间间隔不能超过1个月
+        - 3.1.6版本之前不支持多附件，请参考获取群发记录列表接口获取群发记录列表
+            https://developer.work.weixin.qq.com/document/29143 (已废弃)
+
+        .. note::
+            **权限说明：**
+
+        - 企业需要使用“客户联系”secret或配置到“可调用应用”列表中的自建应用来调用。
+        - 自建应用调用，只会返回应用可见范围内用户的发送情况。
+        - 第三方应用调用需要企业授权客户联系下群发消息给客户和客户群的权限
+
+        使用示例:
+
+        .. code-block:: python
+
+            from wechatpy.exceptions import WeChatClientException
+            from wechatpy.work import WeChatClient
+            # 需要注意使用正确的secret，否则会导致在之后的接口调用中失败
+            client = WeChatClient("corp_id", "secret_key")
+            data = client.external_contact.get_groupmsg_list_v2(
+                start_time=1605171726,
+                end_time=1605172726,
+            )
+        """
+        assert start_time and end_time, "start_time和end_time不可为空"
+
+        data = optionaldict(
+            chat_type=chat_type,
+            start_time=start_time,
+            end_time=end_time,
+            creator=creator,
+            filter_type=filter_type,
+            limit=limit,
+            cursor=cursor
+        )
+        return self._post("externalcontact/get_groupmsg_list_v2", data=data)
 
     def get_user_behavior_data(
         self,
