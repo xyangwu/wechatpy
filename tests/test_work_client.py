@@ -449,6 +449,11 @@ class WeChatClientTestCase(unittest.TestCase):
             res = self.client.external_contact.del_group_welcome_template(template_id="msgXXXXXXX", agentid=1000014)
             self.assertEqual(0, res["errcode"])
 
+    def test_external_get_corp_tag_list(self):
+        with HTTMock(wechat_api_mock):
+            res = self.client.external_contact.get_corp_tag_list(tag_ids=["tag_id1"])
+            self.assertEqual(1, len(res["tag_group"]))
+
     def test_oa_get_dial_record(self):
         with HTTMock(wechat_api_mock):
             res = self.client.oa.get_dial_record(start_time=1536508800, end_time=1536940800, offset=0, limit=100)

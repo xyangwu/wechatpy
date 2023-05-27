@@ -211,6 +211,66 @@ class WeChatExternalContact(BaseWeChatAPI):
         """
         return self._get("externalcontact/get", params={"external_userid": external_userid})
 
+    def remark(
+            self, userid: str,
+            external_userid: str,
+            remark: str,
+            description: str,
+            remark_company: str,
+            remark_mobiles: list,
+            remark_pic_mediaid: str):
+        """
+        修改外部联系人备注.
+
+        企业可通过此接口修改指定用户添加的客户的备注信息。
+
+        :param userid: 是 企业成员的userid
+        :param external_userid: 是 外部联系人userid
+        :param remark: 否 此用户对外部联系人的备注，最多20个字符
+        :param description: 否 此用户对外部联系人的描述，最多150个字符
+        :param remark_company: 否 此用户对外部联系人备注的所属公司名称，最多20个字符
+        :param remark_mobiles: 否 此用户对外部联系人备注的手机号
+        :param remark_pic_mediaid: 否 备注图片的mediaid
+        :return: 处理结果（字典类型）
+
+        .. note::
+        remark_company只在此外部联系人为微信用户时有效。
+        remark，description，remark_company，remark_mobiles和remark_pic_mediaid不可同时为空。
+        如果填写了remark_mobiles，将会覆盖旧的备注手机号。
+        如果要清除所有备注手机号,请在remark_mobiles填写一个空字符串("")。
+        remark_pic_mediaid可以通过素材管理接口获得。
+
+        .. 修改客户备注信息: https://developer.work.weixin.qq.com/document/path/92115
+        """
+        data = optionaldict(userid=userid,
+                            external_userid=external_userid,
+                            remark=remark,
+                            description=description,
+                            remark_company=remark_company,
+                            remark_mobiles=remark_mobiles,
+                            remark_pic_mediaid=remark_pic_mediaid)
+        return self._post('externalcontact/remark', data=data)
+
+    def get_strategy_list(self, cursor='', limit: int = 1000) -> dict:
+        """
+        获取规则组列表
+
+        企业可通过此接口获取企业配置的所有客户规则组id列表。
+
+        :param cursor: 分页查询游标，首次调用可不填
+        :param limit: 分页大小,默认为1000，最大不超过1000
+        :return: 处理结果（字典类型）
+
+        .. note::
+            **权限说明：**
+
+            - 仅可使用“客户联系”secret获取的accesstoken来调用
+
+        .. 客户联系规则组管理: https://developer.work.weixin.qq.com/document/path/94883
+        """
+        data = optionaldict(cursor=cursor, limit=limit)
+        return self._post('externalcontact/customer_strategy/list', data=data)
+
     def add_contact_way(
         self,
         type: int,
@@ -341,6 +401,36 @@ class WeChatExternalContact(BaseWeChatAPI):
         )
         return self._post("externalcontact/add_contact_way", data=data)
 
+    def list_contact_way(self, start_time=None, end_time=None, limit=1000, cursor=None) -> dict:
+        """
+        获取企业已配置的「联系我」列表
+
+        获取企业配置的「联系我」二维码和「联系我」小程序插件列表。不包含临时会话。
+        注意，该接口仅可获取2021年7月10日以后创建的「联系我」
+
+        :param start_time: 「联系我」创建起始时间戳, 默认为90天前
+        :param end_time: 「联系我」创建结束时间戳, 默认为当前时间
+        :param cursor: 分页查询使用的游标，为上次请求返回的 next_cursor
+        :param limit: 每次查询的分页大小，默认为100条，最多支持1000条
+        :return: 返回的 JSON 数据包
+
+        .. note::
+            **调用接口应满足如下的权限要求：**
+
+            - 企业需要使用“客户联系”secret或配置到“可调用应用”列表中的自建应用secret所获取的accesstoken来调用（accesstoken如何获取？）。
+            - 使用人员需要配置了客户联系功能。
+            - 第三方调用时，应用需具有“企业客户权限->客户联系->配置「联系我」二维码”权限。
+            - 第三方/自建应用调用时，传入的userid和partyid需要在此应用的可见范围内。
+            - 配置的使用成员必须在企业微信激活且已经过实名认证。
+            - 临时会话的二维码具有有效期，添加企业成员后仅能在指定有效期内进行会话，仅支持医疗行业企业创建。
+            - 临时会话模式可以配置会话结束时自动发送给用户的结束语。
+
+        .. _获取企业已配置的「联系我」方式: https://developer.work.weixin.qq.com/document/path/92228
+
+        """
+        data = optionaldict(start_time=start_time, end_time=end_time, limit=limit, cursor=cursor)
+        return self._post("externalcontact/list_contact_way", data=data)
+
     def get_contact_way(self, config_id: str) -> dict:
         """
         获取企业已配置的「联系我」方式
@@ -357,8 +447,8 @@ class WeChatExternalContact(BaseWeChatAPI):
 
             - 需要使用 `客户联系secret`_ 或配置到 `可调用应用`_ 列表中的自建应用secret
               来初始化 :py:class:`wechatpy.work.client.WeChatClient` 类。
-            - 使用人员需要配置了 `客户联系功能`_。
-            - 第三方调用时，应用需具有 `企业客户权限`_。
+            - 使用人员需要配置了 `客户联系功能`。
+            - 第三方调用时，应用需具有 `企业客户权限`。
             - 第三方/自建应用调用时，传入的userid和partyid需要在此应用的可见范围内。
             - 配置的使用成员必须在企业微信激活且已经过实名认证。
             - 临时会话的二维码具有有效期，添加企业成员后仅能在指定有效期内进行会话，
@@ -1122,6 +1212,12 @@ class WeChatExternalContact(BaseWeChatAPI):
         remove_tag = remove_tag or []
         data = optionaldict(userid=userid, external_userid=external_userid, add_tag=add_tag, remove_tag=remove_tag)
         return self._post("externalcontact/mark_tag", data=data)
+
+    def get_strategy_tag_list(self, strategy_id=None, tag_id: list = [], group_id: list = []
+                              ) -> dict:
+        """"""
+        data = optionaldict(strategy_id=strategy_id, tag_id=tag_id, group_id=group_id)
+        return self._post('externalcontact/get_strategy_tag_list', data=data)
 
     def get_group_chat_list(
         self,
